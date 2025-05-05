@@ -59,3 +59,22 @@ body {
 .incorrect {
     border-color: red;
 }
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 600px) {
+    #image-options {
+        flex-direction: column; /* Stack images vertically */
+        align-items: center; /* Center images vertically */
+        gap: 10px; /* Adjust gap for vertical layout */
+    }
+
+    .quiz-image {
+        width: 70%; /* Make images take up more width */
+        max-width: 200px; /* But not excessively large */
+        height: auto; /* Maintain aspect ratio */
+    }
+
+    #word-display {
+        font-size: 1.8em; /* Slightly smaller text */
+    }
+}
