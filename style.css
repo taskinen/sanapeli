@@ -52,6 +52,14 @@ body {
     cursor: pointer;
 }
 
+#new-game-button { /* Style for the new game button */
+    padding: 10px 20px;
+    font-size: 1em;
+    cursor: pointer;
+    margin-top: 10px; /* Add some space above */
+    display: none; /* Hide by default */
+}
+
 .correct {
     border-color: green;
 }

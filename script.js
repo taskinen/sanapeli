@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const feedbackDisplay = document.getElementById('feedback');
     const nextButton = document.getElementById('next-button');
     const scoreDisplay = document.getElementById('score-display'); // Get score display element
+    const newGameButton = document.getElementById('new-game-button'); // Get new game button
 
     // --- Configuration ---
     const imageDirectory = 'images/'; // IMPORTANT: Create an 'images' folder next to index.html
@@ -27,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let currentWord = ''; // Will store the word part (without extension)
     let currentFilename = ''; // Will store the full filename
-    let availableWords = [...words]; // Now stores filenames
+    let availableWords = []; // Initialize as empty, will be filled in resetGame
     let score = 0; // Initialize score
     let totalQuestions = 0; // Initialize total questions asked
 
@@ -39,6 +40,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Function to reset the game state
+    function resetGame() {
+        score = 0;
+        totalQuestions = 0;
+        availableWords = [...words]; // Reset available words
+        scoreDisplay.textContent = `Score: ${score}`;
+        scoreDisplay.style.display = 'block'; // Ensure score is visible
+        imageOptionsContainer.style.display = 'flex'; // Ensure images are visible
+        newGameButton.style.display = 'none'; // Hide new game button
+        startNewRound();
+    }
+
     // Function to start a new round
     async function startNewRound() {
         if (availableWords.length === 0) {
@@ -47,11 +60,13 @@ document.addEventListener('DOMContentLoaded', () => {
             feedbackDisplay.textContent = `Final Score: ${score} / ${totalQuestions}`; // Show final score
             nextButton.style.display = 'none';
             scoreDisplay.style.display = 'none'; // Hide round score display
+            newGameButton.style.display = 'inline-block'; // Show new game button
             return;
         }
 
         feedbackDisplay.textContent = '';
         nextButton.style.display = 'none';
+        newGameButton.style.display = 'none'; // Ensure new game button is hidden during rounds
         imageElements.forEach(img => {
             img.classList.remove('correct', 'incorrect');
             img.style.opacity = 1;
@@ -157,9 +172,9 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        scoreDisplay.textContent = `Score: ${score}`; // Initial score display
         nextButton.addEventListener('click', startNewRound);
-        startNewRound();
+        newGameButton.addEventListener('click', resetGame); // Add listener for new game button
+        resetGame(); // Start the game by resetting it
     }
 
     initializeGame();
