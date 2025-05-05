@@ -55,7 +55,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // Function to start a new round
     async function startNewRound() {
         if (availableWords.length === 0) {
-            wordDisplay.textContent = 'Good job!'; // Change game over message
+            // Determine end-of-game message based on score
+            let endMessage = '';
+            if (score <= 3) {
+                endMessage = 'Keep practicing!';
+            } else if (score <= 6) {
+                endMessage = 'You will learn these!';
+            } else if (score <= 8) {
+                endMessage = 'Almost perfect, keep practicing!';
+            } else { // Score is 9 (or potentially higher if more words are added)
+                endMessage = 'Perfect!';
+            }
+            wordDisplay.textContent = endMessage; // Use the determined message
+
             imageOptionsContainer.style.display = 'none';
             feedbackDisplay.textContent = `Final Score: ${score} / ${totalQuestions}`; // Show final score
             nextButton.style.display = 'none';
