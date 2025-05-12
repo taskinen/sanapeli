@@ -10,6 +10,28 @@ body {
     text-align: center;
 }
 
+#category-selection {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+#category-selection h2 {
+    margin-bottom: 15px;
+}
+
+#category-selection button {
+    padding: 10px 20px;
+    font-size: 1.1em;
+    margin: 0 10px;
+    cursor: pointer;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+#category-selection button:hover {
+    background-color: #f0f0f0;
+}
+
 #word-display {
     font-size: 2em;
     margin-bottom: 20px;
@@ -31,10 +53,13 @@ body {
 .quiz-image {
     width: 150px;
     height: 150px;
-    object-fit: cover;
+    object-fit: cover; /* This is fine for body parts */
     border: 2px solid #ccc;
     cursor: pointer;
-    transition: border-color 0.3s;
+    transition: border-color 0.3s, background-color 0.3s; /* Added background-color transition */
+    display: inline-block; /* Ensure it behaves as a block for background color */
+    vertical-align: top; /* Align items nicely if they have different content types */
+    background-color: #fff; /* Default background, will be overridden by color game */
 }
 
 .quiz-image:hover {

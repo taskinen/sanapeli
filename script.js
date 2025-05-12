@@ -4,17 +4,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const imageElements = imageOptionsContainer.querySelectorAll('.quiz-image');
     const feedbackDisplay = document.getElementById('feedback');
     const nextButton = document.getElementById('next-button');
-    const scoreDisplay = document.getElementById('score-display'); // Get score display element
-    const newGameButton = document.getElementById('new-game-button'); // Get new game button
+    const scoreDisplay = document.getElementById('score-display');
+    const newGameButton = document.getElementById('new-game-button');
+
+    // New DOM elements for category selection
+    const categorySelectionContainer = document.getElementById('category-selection');
+    const gameContainer = document.getElementById('game-container');
+    const categoryBodypartsButton = document.getElementById('category-bodyparts');
+    const categoryColorsButton = document.getElementById('category-colors');
 
     // --- Configuration ---
-    const imageDirectory = 'images/'; // IMPORTANT: Create an 'images' folder next to index.html
-    // Add your image filenames here (including extension). These are also used for word matching (without extension).
-    // Example: If you have 'cat.jpg', 'dog.png', 'bird.gif', add 'cat.jpg', 'dog.png', 'bird.gif'.
-    const words = [
-        // Add image filenames (including extension) here
-        // e.g., 'apple.jpg', 'banana.png', 'car.gif'
-        'eyebrow.jpg', // Assuming jpg, adjust if needed
+    const imageDirectory = 'images/';
+    const bodyPartsWords = [
+        'eyebrow.jpg',
         'eye.jpg',
         'nose.jpg',
         'cheek.jpg',
@@ -24,15 +26,20 @@ document.addEventListener('DOMContentLoaded', () => {
         'neck.jpg',
         'shoulders.jpg',
     ];
+    const colorWords = [
+        'Green', 'Grey', 'Brown', 'Red', 'Pink', 'White', 'Black', 'Blue', 'Yellow', 'Orange', 'Purple'
+    ];
     // --- End Configuration ---
 
-    let currentWord = ''; // Will store the word part (without extension)
-    let currentFilename = ''; // Will store the full filename
-    let availableWords = []; // Initialize as empty, will be filled in resetGame
-    let score = 0; // Initialize score
-    let totalQuestions = 0; // Initialize total questions asked
+    let words = []; // This will be set based on category selection
+    let currentCategory = ''; // To store the selected category
 
-    // Function to shuffle an array (Fisher-Yates algorithm)
+    let currentWord = '';
+    let currentFilename = ''; // Used for body parts, can be same as currentWord for colors
+    let availableWords = [];
+    let score = 0;
+    let totalQuestions = 0;
+
     function shuffleArray(array) {
         for (let i = array.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
@@ -40,119 +47,179 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Function to reset the game state
     function resetGame() {
         score = 0;
         totalQuestions = 0;
-        availableWords = [...words]; // Reset available words
+        words = [];
+        availableWords = [];
+        currentCategory = '';
+
+        feedbackDisplay.textContent = '';
+        nextButton.style.display = 'none';
+        newGameButton.style.display = 'none';
+
+        categorySelectionContainer.style.display = 'flex';
+        gameContainer.style.display = 'none';
+
+        imageElements.forEach(img => {
+            img.style.backgroundColor = '';
+            img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+            img.alt = 'Option';
+            img.style.display = 'inline-block';
+            img.classList.remove('correct', 'incorrect');
+            img.style.opacity = 1;
+        });
+        imageOptionsContainer.style.display = 'flex';
+        scoreDisplay.style.display = 'block';
+    }
+
+    function startGame(category) {
+        currentCategory = category;
+        if (category === 'bodyparts') {
+            words = [...bodyPartsWords];
+        } else if (category === 'colors') {
+            words = [...colorWords];
+        }
+
+        if (words.length < 3) {
+            const existingError = document.getElementById('category-error');
+            if (existingError) existingError.remove();
+            const errorMsgElement = document.createElement('p');
+            errorMsgElement.id = 'category-error';
+            errorMsgElement.style.color = 'red';
+            errorMsgElement.style.textAlign = 'center';
+            errorMsgElement.textContent = `Error: Not enough items for the '${category}' category. At least 3 are needed.`;
+            categorySelectionContainer.appendChild(errorMsgElement);
+            setTimeout(() => {
+                const errorMsg = document.getElementById('category-error');
+                if (errorMsg) errorMsg.remove();
+            }, 5000);
+            return;
+        }
+
+        categorySelectionContainer.style.display = 'none';
+        gameContainer.style.display = 'block';
+
+        score = 0;
+        totalQuestions = 0;
+        availableWords = [...words];
+        shuffleArray(availableWords);
+
         scoreDisplay.textContent = `Score: ${score}`;
-        scoreDisplay.style.display = 'block'; // Ensure score is visible
-        imageOptionsContainer.style.display = 'flex'; // Ensure images are visible
-        newGameButton.style.display = 'none'; // Hide new game button
+        newGameButton.style.display = 'none';
         startNewRound();
     }
 
-    // Function to start a new round
     async function startNewRound() {
         if (availableWords.length === 0) {
-            // Determine end-of-game message based on score
             let endMessage = '';
-            if (score <= 3) {
+            const percentage = totalQuestions > 0 ? (score / totalQuestions) * 100 : 0;
+            if (percentage < 40) {
                 endMessage = 'Keep practicing!';
-            } else if (score <= 6) {
+            } else if (percentage < 70) {
                 endMessage = 'You will learn these!';
-            } else if (score <= 8) {
+            } else if (percentage < 99) {
                 endMessage = 'Almost perfect, keep practicing!';
-            } else { // Score is 9 (or potentially higher if more words are added)
+            } else {
                 endMessage = 'Perfect!';
             }
-            wordDisplay.textContent = endMessage; // Use the determined message
+            wordDisplay.textContent = endMessage;
 
             imageOptionsContainer.style.display = 'none';
-            feedbackDisplay.textContent = `Final Score: ${score} / ${totalQuestions}`; // Show final score
+            feedbackDisplay.textContent = `Final Score: ${score} / ${totalQuestions}`;
             nextButton.style.display = 'none';
-            scoreDisplay.style.display = 'none'; // Hide round score display
-            newGameButton.style.display = 'inline-block'; // Show new game button
+            scoreDisplay.style.display = 'none';
+            newGameButton.style.display = 'inline-block';
             return;
         }
 
         feedbackDisplay.textContent = '';
         nextButton.style.display = 'none';
-        newGameButton.style.display = 'none'; // Ensure new game button is hidden during rounds
+
         imageElements.forEach(img => {
             img.classList.remove('correct', 'incorrect');
             img.style.opacity = 1;
-            img.onclick = handleImageClick; // Re-enable clicking
+            img.onclick = handleImageClick;
+            img.style.backgroundColor = '';
+            img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+            img.alt = 'Option';
+            img.style.display = 'inline-block';
         });
 
-        // Select a random word (filename)
-        const wordIndex = Math.floor(Math.random() * availableWords.length);
-        currentFilename = availableWords[wordIndex];
-        currentWord = currentFilename.substring(0, currentFilename.lastIndexOf('.')); // Extract word part
-        availableWords.splice(wordIndex, 1); // Remove filename from available list
-        totalQuestions++; // Increment total questions asked
+        const selectedItem = availableWords.pop();
+        totalQuestions++;
 
-        wordDisplay.textContent = currentWord; // Display the word part
-        scoreDisplay.textContent = `Score: ${score}`; // Update score display
-
-        // Construct the correct image path directly
-        const correctImagePath = `${imageDirectory}${currentFilename}`;
-
-        // Get two other random words (filenames) for incorrect options
-        const incorrectImagePaths = [];
-        const potentialIncorrectFilenames = words.filter(w => w !== currentFilename);
-        shuffleArray(potentialIncorrectFilenames);
-        while (incorrectImagePaths.length < 2 && potentialIncorrectFilenames.length > 0) {
-            const potentialFilename = potentialIncorrectFilenames.pop();
-            incorrectImagePaths.push(`${imageDirectory}${potentialFilename}`);
+        let incorrectOptionsSource = [];
+        if (currentCategory === 'bodyparts') {
+            currentFilename = selectedItem;
+            currentWord = currentFilename.substring(0, currentFilename.lastIndexOf('.'));
+            incorrectOptionsSource = bodyPartsWords.filter(w => w !== currentFilename);
+        } else { // colors
+            currentWord = selectedItem;
+            currentFilename = selectedItem;
+            incorrectOptionsSource = colorWords.filter(c => c !== currentWord);
         }
 
-        // Check if we have enough incorrect options
-        if (incorrectImagePaths.length < 2) {
-            if (availableWords.length > 0) {
+        wordDisplay.textContent = currentWord;
+        scoreDisplay.textContent = `Score: ${score}`;
+
+        shuffleArray(incorrectOptionsSource);
+        const incorrectChoices = incorrectOptionsSource.slice(0, 2);
+
+        if (incorrectChoices.length < 2) {
+            if (words.length >= 3 && (availableWords.length + incorrectChoices.length + 1) >= 3) {
+                availableWords.push(selectedItem);
+                shuffleArray(availableWords);
+                totalQuestions--; // Decrement as this round didn't fully start
                 startNewRound();
                 return;
-            } else {
-                wordDisplay.textContent = 'Game Over! (Not enough images)';
-                imageOptionsContainer.style.display = 'none';
-                feedbackDisplay.textContent = '';
-                nextButton.style.display = 'none';
-                return;
             }
+            wordDisplay.textContent = 'Game Over! (Not enough unique options to continue)';
+            imageOptionsContainer.style.display = 'none';
+            feedbackDisplay.textContent = `Final Score: ${score} / ${totalQuestions - 1}`;
+            nextButton.style.display = 'none';
+            newGameButton.style.display = 'inline-block';
+            return;
         }
 
-        // Combine and shuffle options (paths)
-        const options = [correctImagePath, ...incorrectImagePaths];
+        const options = [selectedItem, ...incorrectChoices];
         shuffleArray(options);
 
-        // Display images
         imageElements.forEach((img, index) => {
             if (options[index]) {
-                img.src = options[index];
-                // Extract word from filename for the data attribute
-                const filename = options[index].substring(imageDirectory.length);
-                img.dataset.word = filename.substring(0, filename.lastIndexOf('.'));
+                const optionValue = options[index];
+                if (currentCategory === 'bodyparts') {
+                    img.src = `${imageDirectory}${optionValue}`;
+                    const filenameForData = optionValue.includes('/') ? optionValue.substring(optionValue.lastIndexOf('/') + 1) : optionValue;
+                    img.dataset.word = filenameForData.substring(0, filenameForData.lastIndexOf('.'));
+                    img.alt = img.dataset.word;
+                } else { // colors
+                    let colorToDisplay = optionValue.toLowerCase();
+                    if (optionValue.toLowerCase() === 'brown') {
+                        colorToDisplay = '#8B4513'; // A common shade of brown (SaddleBrown)
+                    }
+                    img.style.backgroundColor = colorToDisplay;
+                    img.dataset.word = optionValue;
+                    img.alt = optionValue;
+                }
                 img.style.display = 'inline-block';
             } else {
-                img.style.display = 'none'; // Hide unused img elements if fewer than 3 options
+                img.style.display = 'none';
             }
         });
     }
 
-    // Handle image click
     function handleImageClick(event) {
         const selectedImage = event.target;
-        const selectedWord = selectedImage.dataset.word;
+        const selectedWordValue = selectedImage.dataset.word;
 
-        // Disable further clicks on images for this round
         imageElements.forEach(img => img.onclick = null);
 
-        if (selectedWord === currentWord) {
+        if (selectedWordValue.toLowerCase() === currentWord.toLowerCase()) {
             feedbackDisplay.textContent = 'Correct!';
             feedbackDisplay.style.color = 'green';
             selectedImage.classList.add('correct');
-            score++; // Increment score
-            // Optionally fade out incorrect images
+            score++;
             imageElements.forEach(img => {
                 if (img !== selectedImage) {
                     img.style.opacity = 0.5;
@@ -162,31 +229,25 @@ document.addEventListener('DOMContentLoaded', () => {
             feedbackDisplay.textContent = `Incorrect.`;
             feedbackDisplay.style.color = 'red';
             selectedImage.classList.add('incorrect');
-            // Highlight the correct image
             imageElements.forEach(img => {
-                if (img.dataset.word === currentWord) {
+                if (img.dataset.word.toLowerCase() === currentWord.toLowerCase()) {
                     img.classList.add('correct');
                 }
             });
         }
 
-        scoreDisplay.textContent = `Score: ${score}`; // Update score display after answer
+        scoreDisplay.textContent = `Score: ${score}`;
         nextButton.style.display = 'inline-block';
     }
 
-    // Initial setup
-    async function initializeGame() {
-        if (words.length < 3) {
-            wordDisplay.textContent = 'Error';
-            feedbackDisplay.textContent = 'Please add at least 3 words/images to the `words` array in script.js.';
-            imageOptionsContainer.style.display = 'none';
-            console.error('Need at least 3 words/images defined in the script.');
-            return;
-        }
+    function initializeGame() {
+        categoryBodypartsButton.addEventListener('click', () => startGame('bodyparts'));
+        categoryColorsButton.addEventListener('click', () => startGame('colors'));
 
         nextButton.addEventListener('click', startNewRound);
-        newGameButton.addEventListener('click', resetGame); // Add listener for new game button
-        resetGame(); // Start the game by resetting it
+        newGameButton.addEventListener('click', resetGame);
+
+        resetGame();
     }
 
     initializeGame();
